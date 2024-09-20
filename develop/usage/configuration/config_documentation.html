@@ -576,7 +576,8 @@ Also make sure that <code>metrics</code> is not included in <code>resources</cod
 <p>Valid resource names are:</p>
 <ul>
 <li>
-<p><code>client</code>: the client-server API (/_matrix/client), and the synapse admin API (/_synapse/admin). Also implies <code>media</code> and <code>static</code>.</p>
+<p><code>client</code>: the client-server API (/_matrix/client). Also implies <code>media</code> and <code>static</code>.
+If configuring the main process, the Synapse Admin API (/_synapse/admin) is also implied.</p>
 </li>
 <li>
 <p><code>consent</code>: user consent forms (/_matrix/consent). See <a href="../../consent_tracking.html">here</a> for more.</p>
@@ -1682,7 +1683,7 @@ Defaults to <code>per_second: 0.003</code>, <code>burst_count: 5</code>.</p>
 <h3 id="rc_invites"><a class="header" href="#rc_invites"><code>rc_invites</code></a></h3>
 <p>This option sets ratelimiting how often invites can be sent in a room or to a
 specific user. <code>per_room</code> defaults to <code>per_second: 0.3</code>, <code>burst_count: 10</code>,
-<code>per_user</code> defaults to <code>per_second: 0.003</code>, <code>burst_count: 5</code>, and <code>per_issuer</code> 
+<code>per_user</code> defaults to <code>per_second: 0.003</code>, <code>burst_count: 5</code>, and <code>per_issuer</code>
 defaults to <code>per_second: 0.3</code>, <code>burst_count: 10</code>.</p>
 <p>Client requests that invite user(s) when <a href="https://spec.matrix.org/v1.2/client-server-api/#post_matrixclientv3createroom">creating a
 room</a>
@@ -2115,6 +2116,16 @@ Defaults to <code>https://www.recaptcha.net/recaptcha/api/siteverify</code>.</p>
 <p>Example configuration:</p>
 <pre><code class="language-yaml">turn_shared_secret: &quot;YOUR_SHARED_SECRET&quot;
 </code></pre>
+<hr />
+<h3 id="turn_shared_secret_path"><a class="header" href="#turn_shared_secret_path"><code>turn_shared_secret_path</code></a></h3>
+<p>An alternative to <a href="#turn_shared_secret"><code>turn_shared_secret</code></a>:
+allows the shared secret to be specified in an external file.</p>
+<p>The file should be a plain text file, containing only the shared secret.
+Synapse reads the shared secret from the given file once at startup.</p>
+<p>Example configuration:</p>
+<pre><code class="language-yaml">turn_shared_secret_path: /path/to/secrets/file
+</code></pre>
+<p><em>Added in Synapse 1.116.0.</em></p>
 <hr />
 <h3 id="turn_username-and-turn_password"><a class="header" href="#turn_username-and-turn_password"><code>turn_username</code> and <code>turn_password</code></a></h3>
 <p>The Username and password if the TURN server needs them and does not use a token.</p>
@@ -2888,8 +2899,8 @@ the IdP to use an ACS location of
     contact_person:
       - given_name: Bob
         sur_name: &quot;the Sysadmin&quot;
-        email_address&quot;: [&quot;admin@example.com&quot;]
-        contact_type&quot;: technical
+        email_address: [&quot;admin@example.com&quot;]
+        contact_type: technical
 
   saml_session_lifetime: 5m
 
@@ -4167,7 +4178,9 @@ This setting has the following sub-options:</p>
 <li><code>only_for_direct_messages</code>: Whether invites should be automatically accepted for all room types, or only
 for direct messages. Defaults to false.</li>
 <li><code>only_from_local_users</code>: Whether to only automatically accept invites from users on this homeserver. Defaults to false.</li>
-<li><code>worker_to_run_on</code>: Which worker to run this module on. This must match the &quot;worker_name&quot;.</li>
+<li><code>worker_to_run_on</code>: Which worker to run this module on. This must match 
+the &quot;worker_name&quot;. If not set or <code>null</code>, invites will be accepted on the
+main process.</li>
 </ul>
 <p>NOTE: Care should be taken not to enable this setting if the <code>synapse_auto_accept_invite</code> module is enabled and installed.
 The two modules will compete to perform the same task and may result in undesired behaviour. For example, multiple join
