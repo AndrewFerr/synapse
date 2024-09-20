@@ -4219,7 +4219,8 @@ Also make sure that <code>metrics</code> is not included in <code>resources</cod
 <p>Valid resource names are:</p>
 <ul>
 <li>
-<p><code>client</code>: the client-server API (/_matrix/client), and the synapse admin API (/_synapse/admin). Also implies <code>media</code> and <code>static</code>.</p>
+<p><code>client</code>: the client-server API (/_matrix/client). Also implies <code>media</code> and <code>static</code>.
+If configuring the main process, the Synapse Admin API (/_synapse/admin) is also implied.</p>
 </li>
 <li>
 <p><code>consent</code>: user consent forms (/_matrix/consent). See <a href="usage/configuration/../../consent_tracking.html">here</a> for more.</p>
@@ -5325,7 +5326,7 @@ Defaults to <code>per_second: 0.003</code>, <code>burst_count: 5</code>.</p>
 <h3 id="rc_invites"><a class="header" href="#rc_invites"><code>rc_invites</code></a></h3>
 <p>This option sets ratelimiting how often invites can be sent in a room or to a
 specific user. <code>per_room</code> defaults to <code>per_second: 0.3</code>, <code>burst_count: 10</code>,
-<code>per_user</code> defaults to <code>per_second: 0.003</code>, <code>burst_count: 5</code>, and <code>per_issuer</code> 
+<code>per_user</code> defaults to <code>per_second: 0.003</code>, <code>burst_count: 5</code>, and <code>per_issuer</code>
 defaults to <code>per_second: 0.3</code>, <code>burst_count: 10</code>.</p>
 <p>Client requests that invite user(s) when <a href="https://spec.matrix.org/v1.2/client-server-api/#post_matrixclientv3createroom">creating a
 room</a>
@@ -5810,7 +5811,7 @@ unless <a href="usage/configuration/config_documentation.html#enable_registratio
 </code></pre>
 <hr />
 <h3 id="registrations_require_3pid"><a class="header" href="#registrations_require_3pid"><code>registrations_require_3pid</code></a></h3>
-<p>If this is set, users must provide all of the specified types of 3PID when registering an account.</p>
+<p>If this is set, users must provide all of the specified types of <a href="https://spec.matrix.org/latest/appendices/#3pid-types">3PID</a> when registering an account.</p>
 <p>Note that <a href="usage/configuration/config_documentation.html#enable_registration"><code>enable_registration</code></a> must also be set to allow account registration.</p>
 <p>Example configuration:</p>
 <pre><code class="language-yaml">registrations_require_3pid:
@@ -5827,7 +5828,9 @@ flow (overrides <code>registrations_require_3pid</code> if MSISDNs are set as re
 <hr />
 <h3 id="allowed_local_3pids"><a class="header" href="#allowed_local_3pids"><code>allowed_local_3pids</code></a></h3>
 <p>Mandate that users are only allowed to associate certain formats of
-3PIDs with accounts on this server, as specified by the <code>medium</code> and <code>pattern</code> sub-options.</p>
+3PIDs with accounts on this server, as specified by the <code>medium</code> and <code>pattern</code> sub-options.
+<code>pattern</code> is a <a href="https://docs.python.org/3/library/re.html#module-re">Perl-like regular expression</a>.</p>
+<p>More information about 3PIDs, allowed <code>medium</code> types and their <code>address</code> syntax can be found <a href="https://spec.matrix.org/latest/appendices/#3pid-types">in the Matrix spec</a>.</p>
 <p>Example configuration:</p>
 <pre><code class="language-yaml">allowed_local_3pids:
   - medium: email
@@ -5835,7 +5838,7 @@ flow (overrides <code>registrations_require_3pid</code> if MSISDNs are set as re
   - medium: email
     pattern: '^[^@]+@vector\.im$'
   - medium: msisdn
-    pattern: '\+44'
+    pattern: '^44\d{10}$'
 </code></pre>
 <hr />
 <h3 id="enable_3pid_lookup"><a class="header" href="#enable_3pid_lookup"><code>enable_3pid_lookup</code></a></h3>
@@ -6529,8 +6532,8 @@ the IdP to use an ACS location of
     contact_person:
       - given_name: Bob
         sur_name: &quot;the Sysadmin&quot;
-        email_address&quot;: [&quot;admin@example.com&quot;]
-        contact_type&quot;: technical
+        email_address: [&quot;admin@example.com&quot;]
+        contact_type: technical
 
   saml_session_lifetime: 5m
 
@@ -7808,7 +7811,9 @@ This setting has the following sub-options:</p>
 <li><code>only_for_direct_messages</code>: Whether invites should be automatically accepted for all room types, or only
 for direct messages. Defaults to false.</li>
 <li><code>only_from_local_users</code>: Whether to only automatically accept invites from users on this homeserver. Defaults to false.</li>
-<li><code>worker_to_run_on</code>: Which worker to run this module on. This must match the &quot;worker_name&quot;.</li>
+<li><code>worker_to_run_on</code>: Which worker to run this module on. This must match 
+the &quot;worker_name&quot;. If not set or <code>null</code>, invites will be accepted on the
+main process.</li>
 </ul>
 <p>NOTE: Care should be taken not to enable this setting if the <code>synapse_auto_accept_invite</code> module is enabled and installed.
 The two modules will compete to perform the same task and may result in undesired behaviour. For example, multiple join
@@ -17084,9 +17089,7 @@ quickly and automatically check for formatting (and sometimes logical)
 errors in code.</p>
 <p>The necessary tools are:</p>
 <ul>
-<li><a href="https://black.readthedocs.io/en/stable/">black</a>, a source code formatter;</li>
-<li><a href="https://pycqa.github.io/isort/">isort</a>, which organises each file's imports;</li>
-<li><a href="https://github.com/charliermarsh/ruff">ruff</a>, which can spot common errors; and</li>
+<li><a href="https://github.com/charliermarsh/ruff">ruff</a>, which can spot common errors and enforce a consistent style; and</li>
 <li><a href="https://mypy.readthedocs.io/en/stable/">mypy</a>, a type checker.</li>
 </ul>
 <p>See <a href="development/contributing_guide.html#run-the-linters">the contributing guide</a> for instructions
@@ -19540,8 +19543,10 @@ messages are added to the DAG. Normally, <code>stream_ordering</code> is an auto
 incrementing integer, but backfilled events start with <code>stream_ordering=-1</code> and decrement.</p>
 <hr />
 <ul>
-<li><code>/sync</code> returns things in the order they arrive at the server (<code>stream_ordering</code>).</li>
-<li><code>/messages</code> (and <code>/backfill</code> in the federation API) return them in the order determined by the event graph <code>(topological_ordering, stream_ordering)</code>.</li>
+<li>Incremental <code>/sync?since=xxx</code> returns things in the order they arrive at the server
+(<code>stream_ordering</code>).</li>
+<li>Initial <code>/sync</code>, <code>/messages</code> (and <code>/backfill</code> in the federation API) return them in
+the order determined by the event graph <code>(topological_ordering, stream_ordering)</code>.</li>
 </ul>
 <p>The general idea is that, if you're following a room in real-time (i.e.
 <code>/sync</code>), you probably want to see the messages as they arrive at your server,
