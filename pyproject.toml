@@ -96,12 +96,12 @@ manifest-path = "rust/Cargo.toml"
 module-name = "synapse.synapse_rust"
 
 [project]
+name = "matrix-synapse"
 authors = [
     { name = "Element Backend Team" },
 ]
 
 [tool.poetry]
-name = "matrix-synapse"
 version = "1.130.0"
 description = "Homeserver for the Matrix decentralised comms protocol"
 license = "AGPL-3.0-or-later"
