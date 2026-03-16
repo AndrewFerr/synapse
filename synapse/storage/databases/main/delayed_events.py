@@ -141,14 +141,29 @@ class DelayedEventsStore(SQLBaseStore):
         send_ts = Timestamp(creation_ts + delay)
 
         def add_delayed_event_txn(txn: LoggingTransaction) -> Timestamp:
-            num_existing = self.db_pool.simple_select_one_onecol_txn(
+            num_existing: int = self.db_pool.simple_select_one_onecol_txn(
                 txn,
                 table="delayed_events",
                 keyvalues={"user_localpart": user_localpart},
                 retcol="COUNT(*)",
             )
             if num_existing >= limit:
-                e = LimitExceededError("add_delayed_event")
+                next_send_ms: int | None = self.db_pool.simple_select_one_onecol_txn(
+                    txn,
+                    table="delayed_events",
+                    keyvalues={
+                        "is_processed": False,
+                        "user_localpart": user_localpart,
+                    },
+                    retcol="MIN(send_ts)",
+                    allow_none=True,
+                )
+                e = LimitExceededError(
+                    limiter_name="add_delayed_event",
+                    retry_after_ms=next_send_ms - creation_ts
+                    if next_send_ms is not None
+                    else None,
+                )
                 e.msg = "The maximum number of delayed events has been reached."
                 raise e
 
