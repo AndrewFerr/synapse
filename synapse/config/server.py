@@ -914,7 +914,9 @@ class ServerConfig(Config):
                 max_event_delay_duration
             )
             if self.max_event_delay_ms <= 0:
-                raise ConfigError("max_event_delay_duration must be a positive value")
+                raise ConfigError(
+                    "Expected a positive value", ("max_event_delay_duration",)
+                )
         else:
             self.max_event_delay_ms = None
 
@@ -923,6 +925,14 @@ class ServerConfig(Config):
         self.max_delayed_events_per_user: int = config.get(
             "experimental_features", {}
         ).get("msc4140_max_delayed_events_per_user", 100)
+        if (
+            not isinstance(self.max_delayed_events_per_user, int)
+            or self.max_delayed_events_per_user <= 0
+        ):
+            raise ConfigError(
+                "Expected a positive value",
+                ("experimental", "msc4140_max_delayed_events_per_user"),
+            )
 
     def has_tls_listener(self) -> bool:
         return any(listener.is_tls() for listener in self.listeners)

@@ -137,6 +137,7 @@ class DelayedEventsStore(SQLBaseStore):
             LimitExceededError: if the user has reached the limit of
                 how many delayed events they may have scheduled at once.
         """
+        assert limit > 0  # Should be enforced at config read time
         delay_id = _generate_delay_id()
         send_ts = Timestamp(creation_ts + delay)
 
@@ -148,7 +149,7 @@ class DelayedEventsStore(SQLBaseStore):
                 retcol="COUNT(*)",
             )
             if num_existing >= limit:
-                next_send_ms: int | None = self.db_pool.simple_select_one_onecol_txn(
+                next_send_ms: int = self.db_pool.simple_select_one_onecol_txn(
                     txn,
                     table="delayed_events",
                     keyvalues={
@@ -156,13 +157,10 @@ class DelayedEventsStore(SQLBaseStore):
                         "user_localpart": user_localpart,
                     },
                     retcol="MIN(send_ts)",
-                    allow_none=True,
                 )
                 e = LimitExceededError(
                     limiter_name="add_delayed_event",
-                    retry_after_ms=next_send_ms - creation_ts
-                    if next_send_ms is not None
-                    else None,
+                    retry_after_ms=next_send_ms - creation_ts,
                 )
                 e.msg = "The maximum number of delayed events has been reached."
                 raise e
